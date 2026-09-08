@@ -1,0 +1,28 @@
+# Virtual Environment :
+Fraud_env/
+
+# Python cache & compiled files :
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Model weights & Checkpoints (Hugging Face / PyTorch caches) :
+*.pth
+*.pt
+*.bin
+checkpoints/
+
+# OS / Editor junk : 
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Data & Output :
+
+Data/Raw/*
+!Data/Raw/.gitkeep
+
+Data/Processed/*
+!Data/Processed/.gitkeep
