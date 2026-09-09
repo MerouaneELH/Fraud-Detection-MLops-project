@@ -1,29 +1,34 @@
-# Virtual Environment :
+# Virtual Environment:
 Fraud_env/
 
-# Python cache & compiled files :
+# Python cache & compiled files:
 __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
 
-# Model weights & Checkpoints (Hugging Face / PyTorch caches) :
+# Model weights & Checkpoints:
 *.pth
 *.pt
 *.bin
 checkpoints/
 
-# OS / Editor junk : 
+# OS / Editor junk:
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
 
-# Data & Output :
-
+# Data & Output (tracked by DVC):
 Data/Raw/*
 !Data/Raw/.gitkeep
-
 Data/Processed/*
 !Data/Processed/.gitkeep
-/Data
+
+# MLflow (local tracking):
+mlflow.db
+mlruns/
+NoteBooks/mlruns/
+
+# Jupyter checkpoints:
+.ipynb_checkpoints/
