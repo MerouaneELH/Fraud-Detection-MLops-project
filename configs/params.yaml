@@ -1,0 +1,25 @@
+
+data:
+  raw_path: "../Data/Raw/train.parquet"
+  processed_path: "../Data/Processed/train_ready.parquet"
+  test_size: 0.2
+  random_state: 42
+
+train:
+  num_boost_round: 500
+  early_stopping_rounds: 15
+  
+xgboost_params:
+  objective: "binary:logistic"
+  tree_method: "hist"
+  eval_metric: "aucpr"
+  scale_pos_weight: 35.0  
+  subsample: 0.8
+  colsample_bytree: 0.8
+
+optuna:
+  n_trials: 50
+  learning_rate_min: 0.01
+  learning_rate_max: 0.2
+  max_depth_min: 3
+  max_depth_max: 10
