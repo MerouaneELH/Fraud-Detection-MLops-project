@@ -13,7 +13,7 @@ xgboost_params:
   objective: "binary:logistic"
   tree_method: "hist"
   eval_metric: "aucpr"
-  scale_pos_weight: 35.0  
+  scale_pos_weight: 35.0
   subsample: 0.8
   colsample_bytree: 0.8
 
@@ -23,3 +23,5 @@ optuna:
   learning_rate_max: 0.2
   max_depth_min: 3
   max_depth_max: 10
+  scale_pos_weight_min: 10.0
+  scale_pos_weight_max: 50.0

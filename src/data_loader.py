@@ -2,14 +2,10 @@ import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-
-from configs.config import  load_config, save_config
-
 import polars as pl 
 from sklearn.model_selection import train_test_split
 import xgboost as xgb
 
-config = load_config("configs/params.yaml")
 
 #data_loader class for handling data before training 
 
@@ -35,16 +31,20 @@ class Data_loader:
             self.frame = pl.read_parquet(processed_path)
 
     def split_frame(self) -> None:
+        self.load_frame()
         # Collect if lazy, then split
         df = self.frame.collect() if isinstance(self.frame, pl.LazyFrame) else self.frame
+        # Sorting by time to prevent future data from leaking into the training set
+        df.sort("TransactionDT")
+
         X = df.drop("isFraud")
         y = df.select("isFraud")
         
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
             X, y, 
-            stratify=y, 
             test_size=self.config['data']['test_size'], 
-            random_state=self.config['data']['random_state']
+            random_state=self.config['data']['random_state'],
+            shuffle=False
         )
 
     def fix_high_cardinality(self) -> None:

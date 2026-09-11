@@ -1,8 +1,6 @@
 
 from src.data_loader import Data_loader
-import pandas as pd
 import xgboost as xgb 
-import matplotlib.pyplot as plt
 import mlflow
 import numpy as np
 from sklearn.metrics import precision_recall_curve, auc
@@ -10,34 +8,25 @@ from mlflow.models import infer_signature
 import os
 from configs.config import load_config
 
-dvc_data_config = load_config("Data.dvc")
-
 
 class Train:
 
-    def __init__(self):
+    def __init__(self,loader: Data_loader, config: dict):
 
-        self.loader = Data_loader()
-        self.loader.create_dmatrix()
-        self.params = {
-                    "objective": self.loader.config["xgboost_params"]["objective"],
-                    "tree_method": self.loader.config["xgboost_params"]["tree_method"],
-                    "eval_metric": self.loader.config["xgboost_params"]["eval_metric"],
-                    "scale_pos_weight": self.loader.config["xgboost_params"]["scale_pos_weight"],
-                    "subsample": self.loader.config["xgboost_params"]["subsample"],
-                    "colsample_bytree": self.loader.config["xgboost_params"]["colsample_bytree"]
-                }
+        self.loader = loader
+        self.config = config
+        self.params = self.config.get("xgboost_params", {})
         self.model = None
         self.train_history= {}
         self.predictions = None
         self.metrics = {}
 
-    def train_model(self) -> None:
+    def train_model(self, dvc_hash: str) -> None:
 
         mlflow.log_params(self.params)
-        mlflow.log_artifact("train.py")
-        mlflow.log_param("dvc_data_hash", str(dvc_data_config["outs"]["md5"]))
-        mlflow.log_param("Data used", str(self.loader.config["data"]["processed_path"]))
+        mlflow.log_artifact(__file__)
+        mlflow.log_param("dvc_data_hash", dvc_hash)
+        mlflow.log_param("Data used", str(self.config["data"]["processed_path"]))
         mlflow.log_param("train_set_size", len(self.loader.X_train))
 
         self.model = xgb.train(
@@ -66,11 +55,11 @@ class Train:
         best_recall = recall[best_idx]
 
         self.metrics = {
-            "final_pr_auc": final_pr_auc,
-            "optimal_threshold": optimal_threshold,
-            "best_f1": best_f1,
-            "best_precision": best_precision,
-            "best_recall": best_recall
+            "final_pr_auc": float(final_pr_auc),
+            "optimal_threshold": float(optimal_threshold),
+            "best_f1": float(best_f1),
+            "best_precision": float(best_precision),
+            "best_recall": float(best_recall)
         }
 
         # log metrics
@@ -93,6 +82,10 @@ class Train:
 
 if __name__ == "__main__":
 
+    config = load_config("configs/params.yaml")
+    dvc_data_config = load_config("Data.dvc")
+    dvc_hash = str(dvc_data_config["outs"][0]["md5"])
+
     project_root = os.path.abspath(os.path.join(os.getcwd(), ".."))
 
     mlflow.set_tracking_uri(f"sqlite:///{project_root}/mlflow.db")
@@ -101,11 +94,14 @@ if __name__ == "__main__":
     mlflow.set_experiment("Fraud_Detection_model")
     mlflow.xgboost.autolog(log_models=False)
 
-    trainer = Train()
+    loader = Data_loader(config=config)
+    loader.create_dmatrix()
+    
+    trainer = Train(loader=loader, config=config)
 
     with mlflow.start_run(run_name="Fraud_Detection_model"):
 
-        trainer.train_model()
+        trainer.train_model(dvc_hash)
         trainer.calc_metrics()
         trainer.savelog_model()
         
