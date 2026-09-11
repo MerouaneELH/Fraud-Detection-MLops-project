@@ -32,3 +32,4 @@ NoteBooks/mlruns/
 
 # Jupyter checkpoints:
 .ipynb_checkpoints/
+/Data

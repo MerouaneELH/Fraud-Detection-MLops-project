@@ -15,7 +15,6 @@ config = load_config("configs/params.yaml")
 
 class Data_loader:
 
-
     def __init__(self,config: dict):
 
         self.config = config
@@ -92,9 +91,3 @@ class Data_loader:
             enable_categorical=True
         )
 
-
-
-
-
-if __name__ == "__main__":
-    pass

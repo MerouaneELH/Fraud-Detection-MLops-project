@@ -11,7 +11,7 @@ def load_config(config_path: str) -> dict:
     with open(path, "r") as file:
         return yaml.safe_load(file)
 
-def save_config(config: dict, config_path: str = "configs/params.yaml") -> None:
+def save_config(config: dict, config_path: str) -> None:
     """Safely writes a dictionary back to the YAML configuration file."""
     with open(config_path, "w") as stream:
         try:
