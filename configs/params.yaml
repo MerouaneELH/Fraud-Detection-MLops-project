@@ -7,7 +7,7 @@ data:
 
 train:
   num_boost_round: 1000
-  early_stopping_rounds: 25
+  early_stopping_rounds: 30
   
 xgboost_params:
   objective: "binary:logistic"
