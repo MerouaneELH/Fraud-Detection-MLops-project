@@ -1,0 +1,18 @@
+schema: '2.0'
+stages:
+  preprocess:
+    cmd: python -m src.preprocess
+    deps:
+    - path: data/raw/train.parquet
+      hash: md5
+      md5: b9de70443a8b1569a0a29b723cbc1df4
+      size: 78699448
+    - path: src/preprocess.py
+      hash: md5
+      md5: 97906ea9b3f0f5ca1d5a95027a27763e
+      size: 4484
+    outs:
+    - path: data/processed/train_ready.parquet
+      hash: md5
+      md5: fe98ffddedab3c7176ecd30729e0344b
+      size: 70952484

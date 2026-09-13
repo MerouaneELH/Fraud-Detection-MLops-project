@@ -21,8 +21,13 @@ Thumbs.db
 
 # Data & Output (tracked by DVC):
 Data/Raw/*
+!Data/Raw/*.dvc
+!Data/Raw/.gitignore
 !Data/Raw/.gitkeep
+
 Data/Processed/*
+!Data/Processed/*.dvc
+!Data/Processed/.gitignore
 !Data/Processed/.gitkeep
 
 # MLflow (local tracking):
@@ -32,4 +37,4 @@ NoteBooks/mlruns/
 
 # Jupyter checkpoints:
 .ipynb_checkpoints/
-/Data
+

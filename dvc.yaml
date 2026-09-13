@@ -1,25 +1,29 @@
 stages:
-  # Optional: If you extract your Polars preprocessing into its own script
-  prepare_data:
-    cmd: python src/data_loader.py
+  preprocess:
+    cmd: python -m src.preprocess
     deps:
-      - src/data_loader.py
-      - ../Data/Raw/train.parquet
+      - src/preprocess.py
+      - data/raw/train.parquet
     outs:
-      - ../Data/Processed/train_ready.parquet
+      - data/processed/train_ready.parquet
 
-  train_model:
-    cmd: python src/train.py
+  tune:
+    cmd: python -m src.tune
+    deps:
+      - src/tune.py
+      - src/data_loader.py
+      - configs/config.py
+      - data/processed/train_ready.parquet
+
+  train:
+    cmd: python -m src.train
     deps:
       - src/train.py
-      - src/metrics.py
-      - ../Data/Processed/train_ready.parquet
+      - src/data_loader.py
+      - configs/config.py
+      - configs/params.yaml
+      - data/processed/train_ready.parquet
     params:
       - configs/params.yaml:
-        - objective
-        - tree_method
-        - eval_metric
-        - scale_pos_weight
-        - num_boost_round
-        - subsample
-        - colsample_bytree
+        - xgboost_params
+        - train
