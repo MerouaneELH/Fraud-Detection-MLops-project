@@ -1,31 +1,27 @@
-
 data:
-  raw_path: "Data/Raw/train.parquet"
-  processed_path: "Data/Processed/train_ready.parquet"
+  raw_path: Data/Raw/train.parquet
+  processed_path: Data/Processed/train_ready.parquet
   test_size: 0.2
   random_state: 42
-
 train:
   num_boost_round: 1000
-  early_stopping_rounds: 25
-  
+  early_stopping_rounds: 30
 xgboost_params:
-  objective: "binary:logistic"
-  tree_method: "hist"
-  eval_metric: "aucpr"
+  objective: binary:logistic
+  tree_method: hist
+  eval_metric: aucpr
   scale_pos_weight: 1.0
-  subsample: 0.8
-  colsample_bytree: 0.8
-
+  subsample: 0.9173756061846059
+  colsample_bytree: 0.9493268209892916
+  max_depth: 8
+  learning_rate: 0.13043179549838918
+  gamma: 1.107487262755443
 optuna:
-  n_trials: 100
+  n_trials: 50
   learning_rate_min: 0.01
   learning_rate_max: 0.4
   max_depth_min: 3
   max_depth_max: 8
-  scale_pos_weight_min: 1.0
-  scale_pos_weight_max: 10.0
-# regularizers:
   subsample_min: 0.7
   subsample_max: 1.0
   colsample_bytree_min: 0.7

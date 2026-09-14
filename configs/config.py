@@ -6,7 +6,7 @@ def load_config(config_path: str) -> dict:
     path = Path(config_path)
     
     if not path.exists():
-        raise FileNotFoundError(True, f"Configuration file not found at {path.absolute()}")
+        raise FileNotFoundError(f"Configuration file not found at {path.absolute()}")
         
     with open(path, "r") as file:
         return yaml.safe_load(file)

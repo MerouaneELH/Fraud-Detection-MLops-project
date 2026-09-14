@@ -14,14 +14,15 @@ stages:
       - src/data_loader.py
       - configs/config.py
       - data/processed/train_ready.parquet
-
+    params:
+      - configs/params.yaml:
+        - optuna
   train:
     cmd: python -m src.train
     deps:
       - src/train.py
       - src/data_loader.py
       - configs/config.py
-      - configs/params.yaml
       - data/processed/train_ready.parquet
     params:
       - configs/params.yaml:

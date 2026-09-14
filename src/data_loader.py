@@ -1,7 +1,3 @@
-import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 import polars as pl
 from sklearn.model_selection import train_test_split
@@ -82,15 +78,21 @@ class Data_loader:
         
         print(f"[DATA_LOADER] Calculated class imbalance weight: {self.scale_weight:.2f}")
 
-    def create_dmatrix(self) -> None:
+    def prepare(self) -> None:
         # Ensure all preprocessing steps run in the correct order
         self.split_frame()
         self.fix_high_cardinality()
         self.calculate_class_weight()
         print("[DATA_LOADER] Building XGBoost DMatrix structures...")
+        
         # XGBoost cannot digest raw Arrow 'large_string' formats.
-        self.X_train = self.X_train.with_columns(cs.string().cast(pl.Categorical))
-        self.X_test = self.X_test.with_columns(cs.string().cast(pl.Categorical))
+        remaining_strings = self.X_train.select(cs.string()).columns
+        if remaining_strings:
+            print(f"[DATA_LOADER WARNING] Casting remaining string columns to Categorical: {remaining_strings}")
+
+            self.X_train = self.X_train.with_columns(cs.string().cast(pl.Categorical))
+            self.X_test = self.X_test.with_columns(cs.string().cast(pl.Categorical))
+                
         self.dtrain = xgb.DMatrix(
             data=self.X_train.to_arrow(), 
             label=self.y_train.to_arrow(),

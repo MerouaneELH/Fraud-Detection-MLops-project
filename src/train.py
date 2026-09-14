@@ -17,6 +17,7 @@ class Train:
         self.loader = loader
         self.config = config
         self.params = self.config.get("xgboost_params", {})
+        self.params["scale_pos_weight"] = loader.scale_weight  # Use computed class weight
         self.model = None
         self.train_history= {}
         self.predictions = None
@@ -106,7 +107,7 @@ class Train:
             else:
                 print("Challenger failed to beat the champion. Saved to history, but not registered.")
                 
-        except Exception:
+        except mlflow.exceptions.MlflowException:
             # If the alias doesn't exist (first time running the pipeline)
             print("No existing champion found. Registering as the inaugural champion...")
             new_version = mlflow.register_model(f"runs:/{run_id}/model", model_name)
@@ -130,7 +131,7 @@ if __name__ == "__main__":
     mlflow.xgboost.autolog(log_models=False)
 
     loader = Data_loader(config=config)
-    loader.create_dmatrix()
+    loader.prepare()
     
     trainer = Train(loader=loader, config=config)
 
@@ -141,4 +142,4 @@ if __name__ == "__main__":
         trainer.savelog_model()
         trainer.register_if_better(run_id=run.info.run_id)
         
-        
+          

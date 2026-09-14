@@ -49,7 +49,7 @@ class Preprocess():
             # id_12 to id_38 are categorical network/browser signatures
             self.EXPECTED_SCHEMA[col_name] = pl.Float32 if i <= 11 else pl.Utf8
 
-    def load_and_validate(self) -> pl.DataFrame:
+    def load_and_validate(self) -> None:
 
         self.creat_SCHEMA()
 
@@ -74,14 +74,12 @@ class Preprocess():
 
     
 
-    def clean_and_export_data(self,) -> None:
-
+    def clean_and_export_data(self) -> None:
         self.load_and_validate()
 
         print("[PREPROCESS] Filling string nulls and fixing id hyphens...")
         # Fill all string nulls with 'unknown'
         self.df = self.df.with_columns(cs.string().fill_null("unknown"))
-        
         
         # low-cardinality columns
         low_card_cols = [
@@ -91,22 +89,24 @@ class Preprocess():
             "id_34", "id_35", "id_36", "id_37", "id_38", "DeviceType"
         ]
 
-        # Extract categories dynamically and cast to Enum
+        print("[PREPROCESS] Compiling Enum expressions for parallel execution...")
+        enum_expressions = []
+        
+        # Build the list of cast expressions without modifying the dataframe yet
         for col in low_card_cols:
-            # Only process if the column exists to avoid errors
             if col in self.df.columns:
-                # Extract unique values from the column
                 all_cats = self.df.get_column(col).unique().sort().to_list()
                 
-                # Ensure "unknown" is in the enum space, since we filled nulls with it
                 if "unknown" not in all_cats:
                     all_cats.append("unknown")
                     
                 enum_type = pl.Enum(all_cats)
-                self.df = self.df.with_columns(pl.col(col).cast(enum_type))
+                enum_expressions.append(pl.col(col).cast(enum_type))
+
+        # Apply all casts simultaneously in one shot
+        self.df = self.df.with_columns(enum_expressions)
 
         print(f"[PREPROCESS] Saving pristine data to {self.data_config['processed_path']}")
-        
         self.df.write_parquet(self.data_config["processed_path"])
 
 if __name__ == "__main__":

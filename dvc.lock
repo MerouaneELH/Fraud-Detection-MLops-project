@@ -16,3 +16,60 @@ stages:
       hash: md5
       md5: fe98ffddedab3c7176ecd30729e0344b
       size: 70952484
+  tune:
+    cmd: python -m src.tune
+    deps:
+    - path: configs/config.py
+      hash: md5
+      md5: d4d952a4f5b91d9cc07eb4efd0f307d8
+      size: 906
+    - path: data/processed/train_ready.parquet
+      hash: md5
+      md5: fe98ffddedab3c7176ecd30729e0344b
+      size: 70952484
+    - path: src/data_loader.py
+      hash: md5
+      md5: bfec3e532d5a60da3637edb23891b298
+      size: 3960
+    - path: src/tune.py
+      hash: md5
+      md5: 1df348f40b2c794c256aae50e41ff2f1
+      size: 3588
+  train:
+    cmd: python -m src.train
+    deps:
+    - path: configs/config.py
+      hash: md5
+      md5: d4d952a4f5b91d9cc07eb4efd0f307d8
+      size: 906
+    - path: configs/params.yaml
+      hash: md5
+      md5: ec2b95cfb6bb0303a40b71de45d37aea
+      size: 723
+    - path: data/processed/train_ready.parquet
+      hash: md5
+      md5: fe98ffddedab3c7176ecd30729e0344b
+      size: 70952484
+    - path: src/data_loader.py
+      hash: md5
+      md5: bfec3e532d5a60da3637edb23891b298
+      size: 3960
+    - path: src/train.py
+      hash: md5
+      md5: d475ea986720bb5b0e32071aac48df15
+      size: 5795
+    params:
+      configs/params.yaml:
+        train:
+          num_boost_round: 1000
+          early_stopping_rounds: 30
+        xgboost_params:
+          objective: binary:logistic
+          tree_method: hist
+          eval_metric: aucpr
+          scale_pos_weight: 1.0
+          subsample: 0.9173756061846059
+          colsample_bytree: 0.9493268209892916
+          max_depth: 8
+          learning_rate: 0.13043179549838918
+          gamma: 1.107487262755443
