@@ -10,12 +10,12 @@ xgboost_params:
   objective: binary:logistic
   tree_method: hist
   eval_metric: aucpr
-  scale_pos_weight: 1.0
-  subsample: 0.9173756061846059
-  colsample_bytree: 0.9493268209892916
+  scale_pos_weight: 4.533108075561949
+  subsample: 0.8893442031404589
+  colsample_bytree: 0.9939474313125859
   max_depth: 8
-  learning_rate: 0.13043179549838918
-  gamma: 1.107487262755443
+  learning_rate: 0.33084695260252694
+  gamma: 0.4536959510043049
 optuna:
   n_trials: 50
   learning_rate_min: 0.01
@@ -28,3 +28,5 @@ optuna:
   colsample_bytree_max: 1.0
   gamma_min: 0.0
   gamma_max: 2.0
+  scale_pos_weight_min: 1.0
+  scale_pos_weight_max: 10.0

@@ -3,7 +3,7 @@ import optuna
 import xgboost as xgb
 from sklearn.metrics import average_precision_score
 from configs.config import load_config,save_config
-from src.data_loader import Data_Loader
+from src.data_loader import Data_loader
 from pathlib import Path
 
 
@@ -11,7 +11,7 @@ from pathlib import Path
 
 class Tune:
 
-    def __init__(self, config : dict, loader: Data_Loader) -> None:
+    def __init__(self, config : dict, loader: Data_loader) -> None:
         self.loader = loader
         self.config = config
         self.model_params = self.config.get("xgboost_params", {})
@@ -26,8 +26,8 @@ class Tune:
         with mlflow.start_run(nested=True):
 
             params = self.model_params.copy()
-            params["scale_pos_weight"] = self.loader.scale_weight  # Use computed class weight directly
-            # params["scale_pos_weight"] = trial.suggest_float("scale_pos_weight", self.optuna_params["scale_pos_weight_min"], self.optuna_params["scale_pos_weight_max"])
+            # params["scale_pos_weight"] = self.loader.scale_weight  # Use computed class weight directly
+            params["scale_pos_weight"] = trial.suggest_float("scale_pos_weight", self.optuna_params["scale_pos_weight_min"], self.optuna_params["scale_pos_weight_max"])
             params["max_depth"] = trial.suggest_int("max_depth", self.optuna_params["max_depth_min"], self.optuna_params["max_depth_max"])
             params["learning_rate"] = trial.suggest_float("learning_rate", self.optuna_params["learning_rate_min"], self.optuna_params["learning_rate_max"], log=True)
             params["subsample"] = trial.suggest_float("subsample", self.optuna_params["subsample_min"], self.optuna_params["subsample_max"])
@@ -62,7 +62,7 @@ class Tune:
             study.optimize(self.objective, n_trials=self.config['optuna']['n_trials'])
             
             self.config['xgboost_params'].update(study.best_params)
-            self.config['xgboost_params']['scale_pos_weight'] = float(self.loader.scale_weight)
+            # self.config['xgboost_params']['scale_pos_weight'] = float(self.loader.scale_weight)
             save_config(self.config, "configs/params.yaml")
 
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     mlflow.set_tracking_uri(f"sqlite:///{project_root}/mlflow.db")
     mlflow.set_experiment("Fraud_Detection_model")
 
-    loader = Data_Loader(config)
+    loader = Data_loader(config)
     loader.prepare()
 
     tuner = Tune(config, loader)

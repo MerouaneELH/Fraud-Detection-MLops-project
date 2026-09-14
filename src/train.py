@@ -17,7 +17,7 @@ class Train:
         self.loader = loader
         self.config = config
         self.params = self.config.get("xgboost_params", {})
-        self.params["scale_pos_weight"] = loader.scale_weight  # Use computed class weight
+        # self.params["scale_pos_weight"] = loader.scale_weight  # Use computed class weight
         self.model = None
         self.train_history= {}
         self.predictions = None
@@ -78,8 +78,8 @@ class Train:
         
         mlflow.xgboost.log_model(
             xgb_model=self.model, 
-            artifact_path="model",
-            ##registered_model_name="Fraud_XGB_Model" , # Registers it in the UI
+            name="model",
+            # registered_model_name="Fraud_XGB_Model" , # Registers it in the UI
             signature=signature 
             )
 
