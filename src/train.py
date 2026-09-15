@@ -3,7 +3,7 @@ from src.data_loader import Data_loader
 import xgboost as xgb 
 import mlflow
 import numpy as np
-from sklearn.metrics import precision_recall_curve, auc
+from sklearn.metrics import precision_recall_curve, auc, roc_auc_score
 from mlflow.models import infer_signature
 from configs.config import load_config
 from pathlib import Path
@@ -44,9 +44,10 @@ class Train:
 
     def calc_metrics(self) -> None:
 
-        print("[TRAIN] Calculating Precision-Recall AUC and F1 thresholds...")
+        print("[TRAIN] Calculating PR-AUC, ROC-AUC, and F1 thresholds...")
         self.predictions = self.model.predict(self.loader.dtest)
 
+        # 1. Calculate PR-AUC and F1 components
         precision, recall, thresholds = precision_recall_curve(self.loader.y_test.to_numpy(), self.predictions)
         final_pr_auc = auc(recall, precision)
         
@@ -58,8 +59,13 @@ class Train:
         best_precision = precision[best_idx]
         best_recall = recall[best_idx]
 
+        # 2. Calculate ROC-AUC for comparison
+        final_roc_auc = roc_auc_score(self.loader.y_test.to_numpy(), self.predictions)
+
+        # 3. Package metrics for MLflow
         self.metrics = {
             "final_pr_auc": float(final_pr_auc),
+            "final_roc_auc": float(final_roc_auc),
             "optimal_threshold": float(optimal_threshold),
             "best_f1": float(best_f1),
             "best_precision": float(best_precision),

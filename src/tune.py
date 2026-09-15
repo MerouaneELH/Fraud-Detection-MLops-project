@@ -32,7 +32,10 @@ class Tune:
             params["learning_rate"] = trial.suggest_float("learning_rate", self.optuna_params["learning_rate_min"], self.optuna_params["learning_rate_max"], log=True)
             params["subsample"] = trial.suggest_float("subsample", self.optuna_params["subsample_min"], self.optuna_params["subsample_max"])
             params["colsample_bytree"] = trial.suggest_float("colsample_bytree", self.optuna_params["colsample_bytree_min"], self.optuna_params["colsample_bytree_max"])
+            params["min_child_weight"] = trial.suggest_int("min_child_weight", self.optuna_params["min_child_weight_min"], self.optuna_params["min_child_weight_max"])
             params["gamma"] = trial.suggest_float("gamma", self.optuna_params["gamma_min"], self.optuna_params["gamma_max"])
+            params["reg_alpha"] = trial.suggest_float("reg_alpha", self.optuna_params["reg_alpha_min"], self.optuna_params["reg_alpha_max"])
+            params["reg_lambda"] = trial.suggest_float("reg_lambda", self.optuna_params["reg_lambda_min"], self.optuna_params["reg_lambda_max"])
 
             mlflow.log_params(params)
 

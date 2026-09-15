@@ -5,28 +5,35 @@ data:
   random_state: 42
 train:
   num_boost_round: 1000
-  early_stopping_rounds: 30
+  early_stopping_rounds: 50
 xgboost_params:
   objective: binary:logistic
   tree_method: hist
   eval_metric: aucpr
-  scale_pos_weight: 1.616260902034584
-  subsample: 0.8082412745026589
-  colsample_bytree: 0.7196942522110269
-  max_depth: 10
-  learning_rate: 0.10856617515801444
-  gamma: 1.6739268678611028
+  scale_pos_weight: 5.16945712678129
+  subsample: 0.8026729152097098
+  colsample_bytree: 0.6738477762470412
+  max_depth: 7
+  learning_rate: 0.04905250492857709
+  gamma: 1.1382763647320207
+  min_child_weight: 9
 optuna:
   n_trials: 100
   learning_rate_min: 0.01
   learning_rate_max: 0.3
   max_depth_min: 3
   max_depth_max: 10
+  min_child_weight_min: 5
+  min_child_weight_max: 50
   subsample_min: 0.5
   subsample_max: 1.0
   colsample_bytree_min: 0.5
   colsample_bytree_max: 1.0
   gamma_min: 0.0
   gamma_max: 5.0
-  scale_pos_weight_min: 1.0
-  scale_pos_weight_max: 10.0
+  scale_pos_weight_min: 10.0
+  scale_pos_weight_max: 50.0
+  reg_alpha_min: 0.0
+  reg_alpha_max: 10.0
+  reg_lambda_min: 0.0
+  reg_lambda_max: 10.0
