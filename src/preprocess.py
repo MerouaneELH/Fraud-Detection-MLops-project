@@ -106,6 +106,9 @@ class Preprocess():
         # Apply all casts simultaneously in one shot
         self.df = self.df.with_columns(enum_expressions)
 
+        # drop TransactionID
+        self.df = self.df.drop("TransactionID")
+
         print(f"[PREPROCESS] Saving pristine data to {self.data_config['processed_path']}")
         self.df.write_parquet(self.data_config["processed_path"])
 
