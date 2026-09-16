@@ -34,8 +34,9 @@ class Data_loader:
         self.load_frame()
         # Collect if lazy, then split
         df = self.frame.collect() if isinstance(self.frame, pl.LazyFrame) else self.frame
-        # Sorting by time to prevent future data from leaking into the training set
-        df = df.sort("TransactionDT")
+        # Drop TransactionDT — time features already extracted in preprocessing
+        df = df.drop("TransactionDT")
+
 
         X = df.drop("isFraud")
         y = df.get_column("isFraud")

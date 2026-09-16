@@ -9,13 +9,13 @@ stages:
       size: 78699448
     - path: src/preprocess.py
       hash: md5
-      md5: b278c2aee1a673e0d5f894750bdb1fe9
-      size: 8799
+      md5: 9801f6fec632a7f4efffafcf65e4e94f
+      size: 8763
     outs:
     - path: data/processed/train_ready.parquet
       hash: md5
-      md5: 09bafdb66dfe9bfc899b1d5ab3f51e7e
-      size: 77673405
+      md5: e8ec1c64bc11f13ac9d25504ce0ee404
+      size: 77324870
   tune:
     cmd: python -m src.tune
     deps:
@@ -25,34 +25,38 @@ stages:
       size: 906
     - path: data/processed/train_ready.parquet
       hash: md5
-      md5: 09bafdb66dfe9bfc899b1d5ab3f51e7e
-      size: 77673405
+      md5: e8ec1c64bc11f13ac9d25504ce0ee404
+      size: 77324870
     - path: src/data_loader.py
       hash: md5
-      md5: bfec3e532d5a60da3637edb23891b298
+      md5: f0f2f9fa5c1b0468f031c99848e2a0fb
       size: 3960
     - path: src/tune.py
       hash: md5
-      md5: 60a30e40e6b1b564afec881fc29cdd01
-      size: 3758
+      md5: 7542e108f617371433e6dcdb98db9271
+      size: 4046
     params:
       configs/params.yaml:
         optuna:
           n_trials: 100
           learning_rate_min: 0.01
-          learning_rate_max: 0.1
+          learning_rate_max: 0.3
           max_depth_min: 3
-          max_depth_max: 7
+          max_depth_max: 10
           min_child_weight_min: 5
           min_child_weight_max: 50
           subsample_min: 0.5
-          subsample_max: 0.85
+          subsample_max: 1.0
           colsample_bytree_min: 0.5
-          colsample_bytree_max: 0.85
-          gamma_min: 0.1
+          colsample_bytree_max: 1.0
+          gamma_min: 0.0
           gamma_max: 5.0
-          scale_pos_weight_min: 1.0
-          scale_pos_weight_max: 10.0
+          scale_pos_weight_min: 10.0
+          scale_pos_weight_max: 50.0
+          reg_alpha_min: 0.0
+          reg_alpha_max: 10.0
+          reg_lambda_min: 0.0
+          reg_lambda_max: 10.0
   train:
     cmd: python -m src.train
     deps:
@@ -62,11 +66,11 @@ stages:
       size: 906
     - path: data/processed/train_ready.parquet
       hash: md5
-      md5: 09bafdb66dfe9bfc899b1d5ab3f51e7e
-      size: 77673405
+      md5: e8ec1c64bc11f13ac9d25504ce0ee404
+      size: 77324870
     - path: src/data_loader.py
       hash: md5
-      md5: bfec3e532d5a60da3637edb23891b298
+      md5: f0f2f9fa5c1b0468f031c99848e2a0fb
       size: 3960
     - path: src/train.py
       hash: md5
@@ -75,16 +79,18 @@ stages:
     params:
       configs/params.yaml:
         train:
-          num_boost_round: 1000
-          early_stopping_rounds: 50
+          num_boost_round: 10000
+          early_stopping_rounds: 500
         xgboost_params:
           objective: binary:logistic
           tree_method: hist
           eval_metric: aucpr
-          scale_pos_weight: 5.16945712678129
-          subsample: 0.8026729152097098
-          colsample_bytree: 0.6738477762470412
-          max_depth: 7
-          learning_rate: 0.04905250492857709
-          gamma: 1.1382763647320207
-          min_child_weight: 9
+          scale_pos_weight: 31.292110350853164
+          subsample: 0.877112796641063
+          colsample_bytree: 0.5584496856419496
+          max_depth: 10
+          learning_rate: 0.07600064767398323
+          gamma: 0.10922074445988061
+          min_child_weight: 32
+          reg_alpha: 3.000185118780891
+          reg_lambda: 6.65847927414584

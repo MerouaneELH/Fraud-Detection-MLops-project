@@ -68,6 +68,7 @@ class Preprocess():
 
     def add_features(self) -> None:
         print("[PREPROCESS] Engineering behavioral, temporal, and velocity features...")
+        
         self.df = self.df.sort("TransactionDT")
         
         # 1. Base Helpers & Cyclical Time
