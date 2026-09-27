@@ -47,27 +47,33 @@ class Data_loader:
             shuffle=False
         )
 
-    def fix_high_cardinality(self) -> None:
-        print("[DATA_LOADER] Applying frequency encoding to high-cardinality features...")
-        high_card_cols = [
-            "DeviceInfo", "id_30", "id_31", "id_33",
-            "P_emaildomain", "R_emaildomain","card1", 
-            "card2", "card3", "card5", "addr1", "addr2"
-        ]
+    def encode_categoricals(self) -> None:
+        print("[DATA_LOADER] Applying universal frequency encoding to all string features...")
+        import json
         
+        # 1. Automatically find all string columns
+        cat_cols = self.X_train.select(cs.string()).columns
+        
+        # 2. Build the frequency dictionary
         freq_mappings = {}
-        for col in high_card_cols:
+        for col in cat_cols:
             counts = self.X_train.get_column(col).value_counts()
             freq_mappings[col] = dict(zip(counts[col], counts["count"]))
-
+            
+        # 3. Save the exact training memory for Kaggle inference
+        with open("Models/category_mappings.json", "w") as f:
+            json.dump(freq_mappings, f)
+        print(f"[DATA_LOADER] Saved frequency mappings for {len(cat_cols)} columns to Models/category_mappings.json")
+            
+        # 4. Apply the mapping (Unseen categories default to 0)
         self.X_train = self.X_train.with_columns([
             pl.col(col).replace_strict(freq_mappings[col], default=0).cast(pl.UInt32)
-            for col in high_card_cols
+            for col in cat_cols
         ])
-
+        
         self.X_test = self.X_test.with_columns([
             pl.col(col).replace_strict(freq_mappings[col], default=0).cast(pl.UInt32)
-            for col in high_card_cols
+            for col in cat_cols
         ])
 
     def calculate_class_weight(self) -> None:
@@ -82,26 +88,21 @@ class Data_loader:
     def prepare(self) -> None:
         # Ensure all preprocessing steps run in the correct order
         self.split_frame()
-        self.fix_high_cardinality()
+        self.encode_categoricals()
         self.calculate_class_weight()
+        
         print("[DATA_LOADER] Building XGBoost DMatrix structures...")
         
-        # XGBoost cannot digest raw Arrow 'large_string' formats.
-        remaining_strings = self.X_train.select(cs.string()).columns
-        if remaining_strings:
-            print(f"[DATA_LOADER WARNING] Casting remaining string columns to Categorical: {remaining_strings}")
-
-            self.X_train = self.X_train.with_columns(cs.string().cast(pl.Categorical))
-            self.X_test = self.X_test.with_columns(cs.string().cast(pl.Categorical))
-                
+        # CRITICAL: enable_categorical=True is REMOVED. 
+        # Everything is a number now, so XGBoost uses its standard numerical engine.
         self.dtrain = xgb.DMatrix(
             data=self.X_train.to_arrow(), 
-            label=self.y_train.to_arrow(),
-            enable_categorical=True
+            label=self.y_train.to_arrow()
         )
         self.dtest = xgb.DMatrix(
             data=self.X_test.to_arrow(),
-            label=self.y_test.to_arrow(),
-            enable_categorical=True
+            label=self.y_test.to_arrow()
         )
         print("[DATA_LOADER] DMatrix built successfully.")
+
+    

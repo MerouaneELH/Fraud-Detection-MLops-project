@@ -1,10 +1,12 @@
 import polars as pl
 from configs.config import load_config
 import polars.selectors as cs
+import json
 
 class Preprocess():
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, inference: bool = False):
+        self.inference = inference
         self.EXPECTED_SCHEMA = None
         self.data_config = config.get("data", {})
         self.df = None
@@ -14,7 +16,6 @@ class Preprocess():
         self.EXPECTED_SCHEMA = {
             "TransactionDT": pl.UInt32,   
             "TransactionAmt": pl.Float32, 
-            "isFraud": pl.UInt8,
             "ProductCD": pl.Utf8,
             "addr1": pl.Utf8,
             "addr2": pl.Utf8,
@@ -48,7 +49,7 @@ class Preprocess():
         self.creat_SCHEMA()
         print("[PREPROCESS] Loading raw parquet file...")
         self.df = pl.read_parquet(self.data_config['raw_path'])
-
+        if "isFraud" in self.df.columns : self.EXPECTED_SCHEMA["isFraud"] = pl.UInt8
         # Rename id- columns
         self.df = self.df.rename({
             col: col.replace("-", "_") for col in self.df.columns if col.startswith("id-")
@@ -66,6 +67,39 @@ class Preprocess():
         print("[PREPROCESS] Enforcing strict Polars schema on all data...")
         self.df = self.df.cast({col: self.EXPECTED_SCHEMA[col] for col in raw_expected_cols})
 
+    def remove_highly_correlated_v_cols(self, threshold: float = 0.75) -> None:
+        import numpy as np
+        print(f"[PREPROCESS] Identifying V-columns with correlation > {threshold}...")
+        
+        # 1. Select only the V columns that exist in the dataframe
+        v_cols = [col for col in self.df.columns if col.startswith("V")]
+        if not v_cols:
+            return
+            
+        # 2. CRITICAL FIX: Convert to Pandas to handle nulls via pairwise deletion
+        v_df_pandas = self.df.select(v_cols).to_pandas()
+        corr_matrix = v_df_pandas.corr()
+        
+        cols_to_drop = set()
+        
+        # 3. Iterate through the matrix to find highly correlated pairs
+        corr_arrays = corr_matrix.to_numpy()
+        
+        for i in range(len(v_cols)):
+            for j in range(i + 1, len(v_cols)):
+                val = corr_arrays[i, j]
+                
+                # Check that the value is not NaN AND is above the threshold
+                if not np.isnan(val) and abs(val) > threshold:
+                    cols_to_drop.add(v_cols[j])
+                    
+        print(f"[PREPROCESS] Dropping {len(cols_to_drop)} redundant V-columns out of {len(v_cols)}.")
+        
+        if cols_to_drop:
+            self.df = self.df.drop(list(cols_to_drop))
+
+
+    
     def add_features(self) -> None:
         print("[PREPROCESS] Engineering behavioral, temporal, and velocity features...")
         
@@ -159,38 +193,39 @@ class Preprocess():
             })
 
 
-    def clean_and_export_data(self) -> None:
-        # This now handles loading, nulls, feature engineering, and strict casting all at once!
+    def clean_and_export_data(self) -> pl.DataFrame:
+        
         self.load_and_validate()
         
-        # low-cardinality columns
-        low_card_cols = [
-            "ProductCD", "card4", "card6", "email_match_status",
-            "M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9",
-            "id_12", "id_15", "id_16", "id_23", "id_27", "id_28", "id_29",
-            "id_34", "id_35", "id_36", "id_37", "id_38", "DeviceType"
-        ]
-
-        print("[PREPROCESS] Compiling Enum expressions for parallel execution...")
-        enum_expressions = []
-        
-        for col in low_card_cols:
-            if col in self.df.columns:
-                all_cats = self.df.get_column(col).unique().sort().to_list()
-                
-                if "unknown" not in all_cats:
-                    all_cats.append("unknown")
-                    
-                enum_type = pl.Enum(all_cats)
-                enum_expressions.append(pl.col(col).cast(enum_type))
-
-        self.df = self.df.with_columns(enum_expressions)
-
-        # drop TransactionID
-        self.df = self.df.drop("TransactionID")
+        if not self.inference:
+            # --- TRAINING MODE ---
+            print("[PREPROCESS] Removing columns with >= 90% missing values...")
+            cols_to_drop_nulls = ['dist2', 'D7', 'id_07', 'id_08', 'id_18', 'id_21', 'id_22', 'id_23', 'id_24', 'id_25', 'id_26', 'id_27']
+            safe_drop_nulls = [c for c in cols_to_drop_nulls if c in self.df.columns]
+            self.df = self.df.drop(safe_drop_nulls)
+            
+            self.remove_highly_correlated_v_cols(threshold=0.75)
+            self.df = self.df.drop("TransactionID")
+            
+            # Save the final exact column list (excluding isFraud)
+            final_cols = [col for col in self.df.columns if col != "isFraud"]
+            with open("Models/training_columns.json", "w") as f:
+                json.dump(final_cols, f)
+            print(f"[PREPROCESS] Saved {len(final_cols)} training columns to Models/training_columns.json")
+            
+        else:
+            # --- INFERENCE MODE ---
+            print("[PREPROCESS] Inference mode active. Aligning schema with training data...")
+            with open("Models/training_columns.json", "r") as f:
+                training_cols = json.load(f)
+            
+            # CRITICAL: Keep TransactionID alongside training columns so it tracks row movement!
+            cols_to_select = ["TransactionID"] + [c for c in training_cols if c != "TransactionID"]
+            self.df = self.df.select(cols_to_select)
 
         print(f"[PREPROCESS] Saving pristine data to {self.data_config['processed_path']}")
         self.df.write_parquet(self.data_config["processed_path"])
+        return self.df
 
 if __name__ == "__main__":
     config = load_config('configs/params.yaml')

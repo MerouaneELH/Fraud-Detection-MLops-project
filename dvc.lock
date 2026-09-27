@@ -5,17 +5,17 @@ stages:
     deps:
     - path: data/raw/train.parquet
       hash: md5
-      md5: b9de70443a8b1569a0a29b723cbc1df4
-      size: 78699448
+      md5: be16ee58960e7ede95f6b7c0d06d7bbc
+      size: 78744574
     - path: src/preprocess.py
       hash: md5
-      md5: 9801f6fec632a7f4efffafcf65e4e94f
-      size: 8763
+      md5: 7518364c41bb869f269382160a94aaf0
+      size: 10624
     outs:
     - path: data/processed/train_ready.parquet
       hash: md5
-      md5: e8ec1c64bc11f13ac9d25504ce0ee404
-      size: 77324870
+      md5: edd2bee83acc8fa6e235fb611905e22a
+      size: 40486736
   tune:
     cmd: python -m src.tune
     deps:
@@ -25,12 +25,12 @@ stages:
       size: 906
     - path: data/processed/train_ready.parquet
       hash: md5
-      md5: e8ec1c64bc11f13ac9d25504ce0ee404
-      size: 77324870
+      md5: edd2bee83acc8fa6e235fb611905e22a
+      size: 40486736
     - path: src/data_loader.py
       hash: md5
-      md5: f0f2f9fa5c1b0468f031c99848e2a0fb
-      size: 3960
+      md5: 2c488753a00d265be3a2f4546b5c5f31
+      size: 3925
     - path: src/tune.py
       hash: md5
       md5: 7542e108f617371433e6dcdb98db9271
@@ -66,12 +66,12 @@ stages:
       size: 906
     - path: data/processed/train_ready.parquet
       hash: md5
-      md5: e8ec1c64bc11f13ac9d25504ce0ee404
-      size: 77324870
+      md5: edd2bee83acc8fa6e235fb611905e22a
+      size: 40486736
     - path: src/data_loader.py
       hash: md5
-      md5: f0f2f9fa5c1b0468f031c99848e2a0fb
-      size: 3960
+      md5: 2c488753a00d265be3a2f4546b5c5f31
+      size: 3925
     - path: src/train.py
       hash: md5
       md5: f44e3f99fc774f94f6262a39c2d812b2
@@ -79,18 +79,18 @@ stages:
     params:
       configs/params.yaml:
         train:
-          num_boost_round: 10000
-          early_stopping_rounds: 500
+          num_boost_round: 1000
+          early_stopping_rounds: 50
         xgboost_params:
           objective: binary:logistic
           tree_method: hist
           eval_metric: aucpr
-          scale_pos_weight: 31.292110350853164
-          subsample: 0.877112796641063
-          colsample_bytree: 0.5584496856419496
+          scale_pos_weight: 40.09714708450224
+          subsample: 0.7326311730911048
+          colsample_bytree: 0.72663664197538
           max_depth: 10
-          learning_rate: 0.07600064767398323
-          gamma: 0.10922074445988061
-          min_child_weight: 32
-          reg_alpha: 3.000185118780891
-          reg_lambda: 6.65847927414584
+          learning_rate: 0.06864122692674184
+          gamma: 1.378500817761101
+          min_child_weight: 29
+          reg_alpha: 3.3355195215240316
+          reg_lambda: 4.09872015531394

@@ -1,0 +1,3 @@
+data:
+  raw_path: Data/Raw/test.parquet
+  processed_path: Data/Processed/test_ready.parquet
