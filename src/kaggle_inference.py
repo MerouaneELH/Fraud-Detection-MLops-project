@@ -12,16 +12,13 @@ from src.preprocess import Preprocess
 mlflow.set_tracking_uri("http://127.0.0.1:5000")
 model = mlflow.xgboost.load_model("models:/Fraud_XGB_Model@champion")
 
-# 2. Run Preprocessing (TransactionID stays attached throughout)
 config = load_config("configs/params_inference.yaml")
 Preprocessor = Preprocess(config=config, inference=True)
 data = Preprocessor.clean_and_export_data()
 
-# 3. Extract TransactionID from the aligned data
 TransactionID = data.get_column("TransactionID")
 data = data.drop(["TransactionID"])
 
-# 4. Universal Frequency Encoding
 print("[INFERENCE] Applying frequency encoding from training...")
 with open("Models/category_mappings.json", "r") as f:
     freq_mappings = json.load(f)
@@ -33,20 +30,17 @@ data = data.with_columns([
     for col in cat_cols if col in freq_mappings
 ])
 
-# 5. Align with Model Features & Cast
 print("[INFERENCE] Enforcing strict column alignment...")
 data = data.select(model.feature_names).cast(pl.Float32)
 
-# 6. Predict using DMatrix
 print("[INFERENCE] Generating predictions...")
 dmatrix = xgb.DMatrix(data=data.to_arrow())
 predictions = model.predict(dmatrix)
 
-# 7. Build Submission (Now guaranteed 100% row-aligned)
 submission_df = pl.DataFrame({
     "TransactionID": TransactionID,
     "isFraud": predictions
 })
 
-print("✅ Writing aligned submission.csv")
+print("Writing aligned submission.csv")
 submission_df.write_csv("Data/submission/submission.csv")
